@@ -48,7 +48,7 @@ const projectsPlugin = {
 			server.route([
 				{
 					method: 'POST',
-					path: '/env',
+					path: '/push-file',
 					handler: newEnvFileHandler
 				}
 			])
@@ -127,8 +127,8 @@ async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseT
 		// return 204 if project not found
 		if (!Array.isArray(project) || project.length <= 0) return h.response().code(204)
 
-		// Get the variables for the project
-		const variables = await prisma.variable.findMany({
+		// Get the files for the project
+		const files = await prisma.wholeFile.findMany({
 			where: {
 				projectId: project[0].id
 			},
@@ -142,7 +142,7 @@ async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseT
 			Array.isArray(project) && project.length > 0
 				? {
 						project: project[0],
-						envContent: variables
+						envContent: files
 				  }
 				: null
 
@@ -242,7 +242,7 @@ async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 		if (project.length <= 0) return h.response({ message: 'Invalid Project or API key.' }).code(400)
 
 		// Add a new row with the env file contents to the db
-		const environmentFileContents = await prisma.variable.create({
+		const environmentFileContents = await prisma.wholeFile.create({
 			data: {
 				projectId: projectId,
 				content: envFileContents

@@ -49,9 +49,11 @@ program
 			console.log('Initializing project...')
 			const newProject = await initNewFile(envFileName, apikey, projectName, orgId, 'gitUrl', HOST)
 
-			console.log(
-				chalk.green(`✅ Initialized "${newProject.name}" with the project ID "${newProject.id}."`)
-			)
+			if (newProject)
+				console.log(
+					chalk.green(`✅ Initialized "${newProject.name}" with the project ID "${newProject.id}."`)
+				)
+			else return console.log(chalk.red(`❌ Something went wrong.`))
 		}
 	})
 
@@ -119,7 +121,11 @@ program
 		// Prepare to save by removing config stuff and converting back into text
 		const newVarUpdates = prepareToSaveEnvVar(envVarArr)
 
-		pushUpdatesToRemoteServer(mesApiKey, mesProjectId, newVarUpdates)
+		// Save the new environment variables file to the remote server
+		const pushRest = await pushUpdatesToRemoteServer(mesApiKey, mesProjectId, newVarUpdates)
+
+		// If the push was unsuccessful, exit and show message.
+		if (!pushRest.success) return console.log(chalk.red(`❌ ${pushRest.message}`))
 	})
 
 program.parse()
@@ -231,7 +237,7 @@ function prepareToSaveEnvVar(envVarArr) {
 }
 
 async function pushUpdatesToRemoteServer(apiKey, projectId, newVarUpdates) {
-	fetch(`${HOST}/env`, {
+	return await fetch(`${HOST}/push-file`, {
 		method: 'POST',
 		headers: {
 			'X-Api-Key': apiKey,
@@ -244,6 +250,7 @@ async function pushUpdatesToRemoteServer(apiKey, projectId, newVarUpdates) {
 	})
 		.then((response) => {
 			if (response.ok) {
+				console.log('responseresponseresponse', response)
 				return response.json()
 			}
 
@@ -252,14 +259,9 @@ async function pushUpdatesToRemoteServer(apiKey, projectId, newVarUpdates) {
 		.then((result) => {
 			console.log(result)
 		})
-		.catch((error) => {
-			console.log('Something went wrong.', error)
+		.catch(async (error) => {
+			// console.log('Something went wrong.', error)
+			const resp = await error.json()
+			return { success: false, ...resp }
 		})
-
-	// if (resp.ok) {
-	// 	let response = await resp.text()
-	// 	response = JSON.parse(response)
-
-	// 	return response.envContent
-	// } else console.log(resp)
 }
