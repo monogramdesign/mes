@@ -69,6 +69,15 @@ program
 
 		// Get the Project Variables from the API
 		const projEnvVariables = await getProjectVariables(mesApiKey, mesProjectId)
+
+		// If the project is not found, exit
+		if (!projEnvVariables)
+			return console.log(
+				chalk.red(
+					`❌ The project with id "${mesProjectId}" was not found, or your API key is invalid.`
+				)
+			)
+
 		const latestSyncedVariable = projEnvVariables?.[0]
 
 		// ------------------------------------------------------------
@@ -174,6 +183,8 @@ async function getProjectVariables(apiKey, projectId) {
 	})
 
 	if (resp.ok) {
+		if (resp.status === 204) return false
+
 		let response = await resp.text()
 		response = JSON.parse(response)
 
