@@ -1,0 +1,29 @@
+{
+	"name": "@monogram/mes-cli",
+	"version": "0.0.2",
+	"description": "Monogram ENV CLI",
+	"main": "mes.mjs",
+	"bin": {
+		"mes": "mes.mjs"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"environment",
+		"variables",
+		"monogram"
+	],
+	"prettier": "@monogram/prettier-config",
+	"author": "Claudio Fofiu",
+	"license": "ISC",
+	"devDependencies": {
+		"@monogram/prettier-config": "^0.0.8",
+		"zx": "^5.0.0"
+	},
+	"dependencies": {
+		"commander": "^9.0.0",
+		"dotenv": "^16.0.0",
+		"luxon": "^2.3.0"
+	}
+}

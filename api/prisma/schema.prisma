@@ -1,0 +1,90 @@
+// Schema for an identity service for a SaaS
+// This service tracks existing users & their accounts, as well as invites for users who haven't joined yet
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["dataproxy", "referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  shadowDatabaseUrl    = env("SHADOW_DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String?
+  email     String
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id])
+}
+
+model Account {
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  stripeCustomerId     String
+  stripeSubscriptionId String
+  referrer             String?
+  isActive             Boolean
+  invites              Invite[]
+  users                User[]
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  dateSent  DateTime @default(now())
+  email     String
+  accountId String?
+  isValid   Boolean  @default(true)
+  account   Account? @relation(fields: [accountId], references: [id])
+}
+
+//  ----------------------------------------------------------------------------
+
+model Org {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  name      String
+  projects  Project[]
+  apiKeys   ApiKey[]
+
+}
+
+model Project {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  name      String
+  orgId     String
+  org       Org        @relation(fields: [orgId], references: [id])
+  gitUrl    String?
+  variables Variable[]
+}
+
+model ApiKey {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orgId     String
+  org       Org      @relation(fields: [orgId], references: [id])
+  key       String   @default(uuid())
+  // Access type: read, write, full
+  access    String
+}
+
+model Variable {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  // actual content of the environment variable;
+  // v0.1 = whole file here; may change to individual variable in the future
+  content   String   @db.Text
+}

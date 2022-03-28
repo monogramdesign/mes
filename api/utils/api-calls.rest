@@ -1,0 +1,40 @@
+###
+GET http://localhost:4000/users
+
+
+###
+# Get a list of all users
+GET http://localhost:4000/projects
+content-type: application/json
+x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+
+###
+# Gets the latest 10 versions of the env variables contents
+# GET http://localhost:4000/project/b6214baa-4726-41cc-b7db-f3de92d2555e
+GET http://localhost:4000/project/ca2e8777-b347-4142-89e8-63e59e677eee
+x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+
+
+###
+# Create a new project
+POST http://localhost:4000/project
+content-type: application/json
+x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+
+{
+  "name": "Test 3",
+  "orgId": "04402cb5-e956-4c8c-acc4-9d472360ee57",
+  "gitUrl": "test3-git-url"
+}
+
+
+###
+# Save a new environment variable version
+POST http://localhost:4000/env
+content-type: application/json
+x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+
+{
+  "envFileContents": "MES_PROJECT_ID=ca2e8777-b347-4142-89e8-63e59e677eee",
+  "projectId": "ca2e8777-b347-4142-89e8-63e59e677eee"
+}
