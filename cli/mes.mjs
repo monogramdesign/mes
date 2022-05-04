@@ -18,6 +18,7 @@ import {
 
 import { initNewProject } from './util/apis/project.mjs'
 import { inquireNewProjectDetails, inquireExistingProjectDetails } from './util/inquire.mjs'
+import { PROJECT_NAME } from './util/constants.mjs'
 
 // Global variables
 // Get the API Key
@@ -46,14 +47,11 @@ packageJson = JSON.parse(packageJson)
 
 // Commander
 const program = new Command()
-program.name('mes').description('Monogram Env Sync (`mes`) CLI').version(packageJson.version)
+program.name('mes').description(PROJECT_NAME).version(packageJson.version)
 
 program
 	.command('init')
-	.description(`Initialize a new project. (Use single quotes to wrap your project id and api key.)`)
-	// .description('Example: mes init my-project-id abe20061-4199-4140-a4c2-1632b3b41146')
-	// .argument('<projectName>', 'The name of the new project to intialize.')
-	// .argument('<orgId>', 'Organization ID')
+	.description(`Initialize a new project. (Use single quotes to wrap your <orgId> and <apikey>.)`)
 	.option('-o, --orgId <orgId>', 'Organization ID')
 	.option('-k, --api-key <apikey>', "Organization's API Key")
 	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
@@ -63,7 +61,8 @@ program
 		false
 	)
 	.action(async (options) => {
-		console.log('-> options', options, '\n')
+		// console.log('-> options', options, '\n')
+		console.log(PROJECT_NAME, packageJson.version, '\n')
 
 		// Get the api key
 		const orgId = options.orgId || ORG_ID
