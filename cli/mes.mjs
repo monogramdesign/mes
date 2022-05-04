@@ -17,6 +17,7 @@ import {
 } from './util/file.mjs'
 
 import { initNewProject } from './util/apis/project.mjs'
+import { inquireNewProjectDetails, inquireExistingProjectDetails } from './util/inquire.mjs'
 
 // Global variables
 // Get the API Key
@@ -76,50 +77,26 @@ program
 					name: 'projectType',
 					message: 'Initialize a project?',
 					choices: ['Existing', 'New']
-				},
-
-				{
-					type: 'input',
-					name: 'projectName',
-					message: 'What is the name of the new project?',
-					validate: function (value) {
-						if (value.length) {
-							return true
-						} else {
-							return 'Please enter a project name.'
-						}
-					}
-				},
-
-				{
-					type: 'input',
-					name: 'apiServer',
-					message: 'What is the API Server URL?',
-					default() {
-						return 'https://api.mes.monogram.dev'
-					}
-				},
-
-				{
-					type: 'list',
-					name: 'size',
-					message: 'What size do you need?',
-					choices: ['Jumbo', 'Large', 'Standard', 'Medium', 'Small', 'Micro'],
-					filter(val) {
-						return val.toLowerCase()
-					}
 				}
 			])
-			.then((answers) => {
-				console.log(
-					`\nThe following ${chalk.cyan(
-						answers.projectType.toLowerCase()
-					)} project is being intialized:\n`,
-					answers,
-					'\n'
-				)
-				return answers
+			.then(async (answers) => {
+				if (answers.projectType === 'New') {
+					const projectDetails = await inquireNewProjectDetails()
+					return { ...answers, ...projectDetails }
+				} else {
+					const projectDetails = await inquireExistingProjectDetails()
+					return { ...answers, ...projectDetails }
+				}
 			})
+
+		// User FYI
+		console.log(
+			`\nThe following ${chalk.cyan(
+				initAnswers.projectType.toLowerCase()
+			)} project is being intialized:\n`,
+			initAnswers,
+			'\n'
+		)
 
 		if (!checkFileExists('mes.config.js') || options.force) {
 			const initProject =
@@ -131,7 +108,7 @@ program
 							'gitUrl',
 							initAnswers?.apiServer
 					  )
-					: initAnswers.projectId
+					: { id: initAnswers.projectId }
 
 			// initialize the new config file
 			await initNewConfigFile({
@@ -143,10 +120,7 @@ program
 			// initialize the new .env file
 			const envFile = await fs.readFile(envFileName)
 
-			console.log('initProjectinitProject', initProject)
-
 			if (envFile === undefined || options.force) {
-				console.log('Initializing project...')
 				const newEnvFile = await initNewFile(
 					envFileName,
 					initApiKey,
@@ -264,6 +238,7 @@ program.parse()
 function canExecute() {
 	return !!config
 }
+
 /**
  * Moved to a separate method to handle different error messages.
  * @param {string} type error type
@@ -283,7 +258,7 @@ function errorMsg(type) {
 async function loadConfig() {
 	// Load config file if exists
 	if (fs.existsSync('./mes.config.js')) {
-		const mesConfig = await import('./_mes.config.js')
+		const mesConfig = await import('./mes.config.js')
 
 		config = mesConfig.default
 		HOST = !!config.apiServer ? config.apiServer : 'https://api.mes.monogram.dev'
