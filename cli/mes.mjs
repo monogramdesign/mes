@@ -1,17 +1,44 @@
 #! /usr/bin/env node
 
 import { Command } from 'commander'
-import { $, argv, cd, chalk, fs, fetch } from 'zx'
+import { $, argv, cd, chalk, fs, fetch, question } from 'zx'
 import { DateTime } from 'luxon'
-import 'dotenv/config'
-import * as mesConfig from './mes.config.js'
 
-import { initNewFile, backupCurrentEnvFile, writeNewEnvFile } from './sync/file.mjs'
+import inquirer from 'inquirer'
+import 'dotenv/config'
+// import * as mesConfig from './mes.config.js'
+
+import {
+	initNewFile,
+	backupCurrentEnvFile,
+	writeNewEnvFile,
+	initNewConfigFile,
+	checkFileExists
+} from './util/file.mjs'
+
+import { initNewProject } from './util/apis/project.mjs'
+
+// Global variables
+// Get the API Key
+const API_KEY = process.env.MES_API_KEY
+const ORG_ID = process.env.MES_ORG_ID
+
+if (!API_KEY || !ORG_ID) {
+	console.log(chalk.red(`❌ API_KEY and ORG_ID not available.`))
+	console.log(`
+To make it easier you should add them in your ~/.zshrc file.
+
+  export MES_API_KEY=<your-api-key>
+  export MES_ORG_ID=<your-org-id>
+`)
+
+	process.exit(1)
+}
+
+let config = null
+let HOST = 'https://api.mes.monogram.dev'
 
 $.verbose = false
-
-const config = mesConfig.default
-const HOST = config.apiServer ? config.apiServer : 'https://api.mes.monogram.dev'
 
 let packageJson = await fs.readFile('./package.json')
 packageJson = JSON.parse(packageJson)
@@ -24,36 +51,127 @@ program
 	.command('init')
 	.description(`Initialize a new project. (Use single quotes to wrap your project id and api key.)`)
 	// .description('Example: mes init my-project-id abe20061-4199-4140-a4c2-1632b3b41146')
-	.argument('<projectName>', 'The name of the new project to intialize.')
-	.argument('<orgId>', 'Organization ID')
-	.option('-k, --api-key <apikey>', 'Path to .env', '.env.local')
-	.option('-e, --env-file <filename>', "Organization's API Key")
-	.action(async (projectName, orgId) => {
-		const options = program.opts()
-		const envFileName = options.envFile || '.env.local'
-
-		const envFile = await fs
-			.readFile(envFileName)
-			.then(() => {
-				console.log(chalk.red(`Project already initialized into: ${envFileName}.`))
-				process.exit(1)
-			})
-			.catch(async () => {
-				// This will return undefined; we can use that to check if the file exists
-			})
+	// .argument('<projectName>', 'The name of the new project to intialize.')
+	// .argument('<orgId>', 'Organization ID')
+	.option('-o, --orgId <orgId>', 'Organization ID')
+	.option('-k, --api-key <apikey>', "Organization's API Key")
+	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
+	.option(
+		'-f, --force',
+		'Force the initialization of the project. Overwrite the existing config and .env file.',
+		false
+	)
+	.action(async (options) => {
+		console.log('-> options', options, '\n')
 
 		// Get the api key
-		const apikey = options.apiKey || process.env.MES_API_KEY
+		const orgId = options.orgId || ORG_ID
+		const initApiKey = options.apikey || API_KEY
+		const envFileName = options.envFile || '.env.local'
 
-		if (envFile === undefined) {
-			console.log('Initializing project...')
-			const newProject = await initNewFile(envFileName, apikey, projectName, orgId, 'gitUrl', HOST)
+		const initAnswers = await inquirer
+			.prompt([
+				{
+					type: 'list',
+					name: 'projectType',
+					message: 'Initialize a project?',
+					choices: ['Existing', 'New']
+				},
 
-			if (newProject)
+				{
+					type: 'input',
+					name: 'projectName',
+					message: 'What is the name of the new project?',
+					validate: function (value) {
+						if (value.length) {
+							return true
+						} else {
+							return 'Please enter a project name.'
+						}
+					}
+				},
+
+				{
+					type: 'input',
+					name: 'apiServer',
+					message: 'What is the API Server URL?',
+					default() {
+						return 'https://api.mes.monogram.dev'
+					}
+				},
+
+				{
+					type: 'list',
+					name: 'size',
+					message: 'What size do you need?',
+					choices: ['Jumbo', 'Large', 'Standard', 'Medium', 'Small', 'Micro'],
+					filter(val) {
+						return val.toLowerCase()
+					}
+				}
+			])
+			.then((answers) => {
 				console.log(
-					chalk.green(`✅ Initialized "${newProject.name}" with the project ID "${newProject.id}."`)
+					`\nThe following ${chalk.cyan(
+						answers.projectType.toLowerCase()
+					)} project is being intialized:\n`,
+					answers,
+					'\n'
 				)
-			else return console.log(chalk.red(`❌ Something went wrong.`))
+				return answers
+			})
+
+		if (!checkFileExists('mes.config.js') || options.force) {
+			const initProject =
+				initAnswers.projectType === 'New'
+					? await initNewProject(
+							initApiKey,
+							initAnswers?.projectName,
+							orgId,
+							'gitUrl',
+							initAnswers?.apiServer
+					  )
+					: initAnswers.projectId
+
+			// initialize the new config file
+			await initNewConfigFile({
+				syncType: 'file',
+				projectId: initProject.id,
+				apiServer: initAnswers?.apiServer
+			})
+
+			// initialize the new .env file
+			const envFile = await fs.readFile(envFileName)
+
+			console.log('initProjectinitProject', initProject)
+
+			if (envFile === undefined || options.force) {
+				console.log('Initializing project...')
+				const newEnvFile = await initNewFile(
+					envFileName,
+					initApiKey,
+					initProject?.name,
+					orgId,
+					'gitUrl',
+					HOST
+				)
+
+				if (initProject?.id && newEnvFile)
+					console.log(
+						chalk.green(
+							`✅ Initialized "${initProject.name}" with the project ID "${initProject.id}."`
+						)
+					)
+				else return console.log(chalk.red(`❌ Something went wrong.`))
+			}
+		}
+
+		// ❌ mes.config.js or -f is not provided
+		else {
+			console.log(
+				chalk.red(`Project already initialized into: ${envFileName}. Use -f to overwrite. [2]`)
+			)
+			process.exit(1)
 		}
 	})
 
@@ -63,40 +181,47 @@ program
 	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
 	// .option('-u --up', 'Sync up to the server', false)
 	.action(async () => {
-		// Parse options
-		const options = program.opts()
-		const envFileName = options.envFile || '.env.local'
+		// Load config
+		await loadConfig()
 
-		const { mesProjectId, mesApiKey, updatedAt: fileUpdatedAt } = await getConfig(envFileName)
+		if (canExecute()) {
+			// Parse options
+			const options = program.opts()
+			const envFileName = options.envFile || '.env.local'
 
-		// Get the Project Variables from the API
-		const projEnvVariables = await getProjectVariables(mesApiKey, mesProjectId)
+			const { mesProjectId, updatedAt: fileUpdatedAt } = await getConfig(envFileName)
 
-		// If the project is not found, exit
-		if (!projEnvVariables)
-			return console.log(
-				chalk.red(
-					`❌ The project with id "${mesProjectId}" was not found, or your API key is invalid.`
+			// Get the Project Variables from the API
+			const projEnvVariables = await getProjectVariables(API_KEY, mesProjectId)
+
+			// If the project is not found, exit
+			if (!projEnvVariables)
+				return console.log(
+					chalk.red(
+						`❌ The project with id "${mesProjectId}" was not found, or your API key is invalid.`
+					)
 				)
-			)
 
-		const latestSyncedVariable = projEnvVariables?.[0]
+			const latestSyncedVariable = projEnvVariables?.[0]
 
-		// ------------------------------------------------------------
-		const remoteLatestUpdatedAt = DateTime.fromJSDate(new Date(latestSyncedVariable.updatedAt))
-		const localFileUpdatedAt = DateTime.fromJSDate(new Date(fileUpdatedAt))
-		// ------------------------------------------------------------
+			// ------------------------------------------------------------
+			const remoteLatestUpdatedAt = DateTime.fromJSDate(new Date(latestSyncedVariable.updatedAt))
+			const localFileUpdatedAt = DateTime.fromJSDate(new Date(fileUpdatedAt))
+			// ------------------------------------------------------------
 
-		// Is the local file updated before remote
-		if (localFileUpdatedAt < remoteLatestUpdatedAt) {
-			// Make a copy of the current environment variables
-			backupCurrentEnvFile(envFileName)
+			// Is the local file updated before remote
+			if (localFileUpdatedAt < remoteLatestUpdatedAt) {
+				// Make a copy of the current environment variables
+				backupCurrentEnvFile(envFileName)
 
-			// Write the new environment variables to the file system
-			writeNewEnvFile(envFileName, mesApiKey, mesProjectId, latestSyncedVariable?.content)
-			return console.log(chalk.green('✅ Changes detected. Local file synced.'))
+				// Write the new environment variables to the file system
+				writeNewEnvFile(envFileName, API_KEY, mesProjectId, latestSyncedVariable?.content)
+				return console.log(chalk.green('✅ Changes detected. Local file synced.'))
+			} else {
+				return console.log(chalk.blue('ℹ️ Local file is updated before remote, no need to sync.'))
+			}
 		} else {
-			return console.log(chalk.blue('ℹ️ Local file is updated before remote, no need to sync.'))
+			errorMsg('noConfig')
 		}
 	})
 
@@ -108,27 +233,62 @@ program
 	.description('Push only the environment file to the remote environment.')
 	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
 	.action(async () => {
-		const options = program.opts()
-		const envFileName = options.envFile || '.env.local'
-		const { mesProjectId, mesApiKey } = await getConfig(envFileName)
+		if (canExecute()) {
+			const options = program.opts()
+			const envFileName = options.envFile || '.env.local'
+			const { mesProjectId } = await getConfig(envFileName)
 
-		// Read the local environment file
-		const currentEnvFileFS = await readEnvFile(envFileName)
+			// Read the local environment file
+			const currentEnvFileFS = await readEnvFile(envFileName)
 
-		// Get the array of environment variables
-		const envVarArr = envVarToArr(currentEnvFileFS)
+			// Get the array of environment variables
+			const envVarArr = envVarToArr(currentEnvFileFS)
 
-		// Prepare to save by removing config stuff and converting back into text
-		const newVarUpdates = prepareToSaveEnvVar(envVarArr)
+			// Prepare to save by removing config stuff and converting back into text
+			const newVarUpdates = prepareToSaveEnvVar(envVarArr)
 
-		// Save the new environment variables file to the remote server
-		const pushRest = await pushUpdatesToRemoteServer(mesApiKey, mesProjectId, newVarUpdates)
+			// Save the new environment variables file to the remote server
+			const pushRest = await pushUpdatesToRemoteServer(API_KEY, mesProjectId, newVarUpdates)
 
-		// If the push was unsuccessful, exit and show message.
-		if (!pushRest.success) return console.log(chalk.red(`❌ ${pushRest.message}`))
+			// If the push was unsuccessful, exit and show message.
+			if (!pushRest.success) return console.log(chalk.red(`❌ ${pushRest.message}`))
+		}
 	})
 
 program.parse()
+
+/**
+ * Moved to a separate method to handle other checks in the future.
+ * @returns {boolean} - True if the config file exists
+ */
+function canExecute() {
+	return !!config
+}
+/**
+ * Moved to a separate method to handle different error messages.
+ * @param {string} type error type
+ * @returns console error messages
+ */
+function errorMsg(type) {
+	switch (type) {
+		case 'noConfig':
+			return console.error(chalk.red('❌ No config found. Run "mes init" first.'))
+			break
+
+		default:
+			break
+	}
+}
+
+async function loadConfig() {
+	// Load config file if exists
+	if (fs.existsSync('./mes.config.js')) {
+		const mesConfig = await import('./_mes.config.js')
+
+		config = mesConfig.default
+		HOST = !!config.apiServer ? config.apiServer : 'https://api.mes.monogram.dev'
+	}
+}
 
 /**
  * Get the projectId and apiKey from the .env file
@@ -136,16 +296,13 @@ program.parse()
  * @param {*} envFileName - The path to the .env file
  * @returns
  */
-async function getConfig(envFileName) {
+async function getConfig(envFileName, projectId) {
 	// Read the local environment file
 	const envFile = await readEnvFile(envFileName)
 	const envFileLines = envFile.split('\n')
 
 	// Get the Project ID
 	const mesProjectId = config.projectId
-
-	// Get the API Key
-	const mesApiKey = process.env.MES_API_KEY
 
 	// Get the latest updated date and time
 	const updatedAtLine = envFileLines.find((line) => {
@@ -156,7 +313,6 @@ async function getConfig(envFileName) {
 
 	return {
 		mesProjectId,
-		mesApiKey,
 		updatedAt
 	}
 }
