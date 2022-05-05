@@ -119,9 +119,9 @@ program
 			})
 
 			// initialize the new .env file
-			const envFile = await fs.readFile(envFileName)
+			const envFileExists = checkFileExists(envFileName)
 
-			if (envFile === undefined || options.force) {
+			if (!envFileExists || options.force) {
 				const newEnvFile = await initNewFile(
 					envFileName,
 					initApiKey,
