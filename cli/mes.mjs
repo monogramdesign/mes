@@ -6,7 +6,6 @@ import { DateTime } from 'luxon'
 
 import inquirer from 'inquirer'
 import 'dotenv/config'
-// import * as mesConfig from './mes.config.js'
 
 import {
 	initNewFile,
@@ -99,7 +98,7 @@ program
 			'\n'
 		)
 
-		if (!checkFileExists('mes.config.js') || options.force) {
+		if (!checkFileExists(`${process.cwd()}/mes.config.js`) || options.force) {
 			const initProject =
 				initAnswers.projectType === 'New'
 					? await initNewProject(
@@ -275,8 +274,8 @@ function errorMsg(type) {
 
 async function loadConfig() {
 	// Load config file if exists
-	if (fs.existsSync('./mes.config.js')) {
-		const mesConfig = await import('./mes.config.js')
+	if (fs.existsSync(`${process.cwd()}/mes.config.js`)) {
+		const mesConfig = await import(`${process.cwd()}/mes.config.js`)
 
 		config = mesConfig.default
 		if (config.apiServer) API_SERVER = config.apiServer

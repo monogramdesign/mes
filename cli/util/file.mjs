@@ -59,8 +59,10 @@ LAST_UPDATE=${DateTime.now().toISO()}
 function initNewConfigFile(params) {
 	const { syncType, projectId, apiServer } = params
 
+	// TODO: Handle autosync
 	const newConfigJson = `module.exports = {
 	syncType: '${syncType}', // "file" or "variable"
+	autoSync: true, // true or false
 	projectId: '${projectId}',
 	apiServer: '${apiServer || 'https://api.mes.monogram.dev'}'
 }
