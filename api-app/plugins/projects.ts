@@ -263,7 +263,7 @@ async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 		if (environmentFileContents)
 			return h
 				.response({
-					message: `New variable added successfully.`,
+					message: `File contents pushed successfully to the server.`,
 					date: environmentFileContents.createdAt,
 					success: true
 				})

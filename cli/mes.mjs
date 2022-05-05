@@ -80,7 +80,7 @@ program
 			])
 			.then(async (answers) => {
 				if (answers.projectType === 'New') {
-					const projectDetails = await inquireNewProjectDetails()
+					const projectDetails = await inquireNewProjectDetails(API_SERVER)
 					return { ...answers, ...projectDetails }
 				} else {
 					const projectDetails = await inquireExistingProjectDetails(API_SERVER, initApiKey)
@@ -182,27 +182,37 @@ program
 					)
 				)
 
-			const latestSyncedVariable = projEnvVariables?.[0]
+			// Project synced before; continue
+			if (projEnvVariables.length > 0) {
+				const latestSyncedVariable = projEnvVariables?.[0]
 
-			// ------------------------------------------------------------
-			const remoteLatestUpdatedAt = DateTime.fromJSDate(new Date(latestSyncedVariable.updatedAt))
-			const localFileUpdatedAt = DateTime.fromJSDate(new Date(fileUpdatedAt))
-			// ------------------------------------------------------------
+				// ----------------------------------------------------------------------------------------
+				const remoteLatestUpdatedAt = DateTime.fromJSDate(new Date(latestSyncedVariable.updatedAt))
+				const localFileUpdatedAt = DateTime.fromJSDate(new Date(fileUpdatedAt))
+				// ----------------------------------------------------------------------------------------
 
-			// Is the local file updated before remote
-			if (localFileUpdatedAt < remoteLatestUpdatedAt) {
-				// Make a copy of the current environment variables
-				backupCurrentEnvFile(envFileName)
+				// Is the local file updated before remote
+				if (localFileUpdatedAt < remoteLatestUpdatedAt) {
+					// Make a copy of the current environment variables
+					backupCurrentEnvFile(envFileName)
 
-				// Write the new environment variables to the file system
-				writeNewEnvFile(envFileName, API_KEY, mesProjectId, latestSyncedVariable?.content)
-				return console.log(chalk.green('✅ Changes detected. Local file synced.'))
-			} else {
-				return console.log(chalk.blue('ℹ️ Local file is updated before remote, no need to sync.'))
+					// Write the new environment variables to the file system
+					writeNewEnvFile(envFileName, API_KEY, mesProjectId, latestSyncedVariable?.content)
+					return console.log(chalk.green('✅ Changes detected. Local file synced with the server.'))
+				} else {
+					return console.log(chalk.blue('ℹ️ Local file is updated before remote, no need to sync.'))
+				}
+			}
+
+			// Project never synced before
+			else {
+				console.log(chalk.blue('ℹ️ Project never synced before.'))
 			}
 		} else {
 			errorMsg('noConfig')
 		}
+
+		process.exit(1)
 	})
 
 /**
@@ -213,6 +223,9 @@ program
 	.description('Push only the environment file to the remote environment.')
 	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
 	.action(async () => {
+		// Load config
+		await loadConfig()
+
 		if (canExecute()) {
 			const options = program.opts()
 			const envFileName = options.envFile || '.env.local'
@@ -232,6 +245,8 @@ program
 
 			// If the push was unsuccessful, exit and show message.
 			if (!pushRest.success) return console.log(chalk.red(`❌ ${pushRest.message}`))
+
+			return console.log(chalk.green(`✅ ${pushRest.message}\n   ${pushRest.date}`))
 		}
 	})
 
@@ -385,19 +400,17 @@ async function pushUpdatesToRemoteServer(apiKey, projectId, newVarUpdates) {
 			projectId: projectId
 		})
 	})
-		.then((response) => {
+		.then(async (response) => {
 			if (response.ok) {
-				console.log('responseresponseresponse', response)
-				return response.json()
+				return await response.json()
 			}
 
 			return Promise.reject(response)
 		})
 		.then((result) => {
-			console.log(result)
+			return result
 		})
 		.catch(async (error) => {
-			// console.log('Something went wrong.', error)
 			const resp = await error.json()
 			return { success: false, ...resp }
 		})
