@@ -1,4 +1,4 @@
-import { chalk, fetch } from 'zx'
+import { fetch } from 'zx'
 
 import inquirer from 'inquirer'
 import inquirerPrompt from 'inquirer-autocomplete-prompt'

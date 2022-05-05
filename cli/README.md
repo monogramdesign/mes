@@ -2,6 +2,11 @@
 
 Monogram Env Sync (`mes`) is a tool to sync up a project's .env file.
 
+!!!THIS PROJECT IS IN HEAVY DEVELOPMENT AND IT IS NOT READY FOR USE JUST YET!
+
+Want to help? Please join us to develop this project.
+[Envornment Sync GitHub Repo](https://github.com/monogramdesign/mes)
+
 ## Install
 
 To install run the following command:

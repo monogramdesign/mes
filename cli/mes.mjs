@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import { Command } from 'commander'
-import { $, argv, cd, chalk, fs, fetch, question } from 'zx'
+import { $, chalk, fs, fetch } from 'zx'
 import { DateTime } from 'luxon'
 
 import inquirer from 'inquirer'
@@ -18,7 +18,7 @@ import {
 
 import { initNewProject } from './util/apis/project.mjs'
 import { inquireNewProjectDetails, inquireExistingProjectDetails } from './util/inquire.mjs'
-import { PROJECT_NAME } from './util/constants.mjs'
+import { PROJECT_NAME, PROJECT_VERSION } from './util/constants.mjs'
 
 // Global variables
 // Get the API Key
@@ -42,12 +42,9 @@ let API_SERVER = process.env.MES_API_SERVER || 'https://api.mes.monogram.dev'
 
 $.verbose = false
 
-let packageJson = await fs.readFile('./package.json')
-packageJson = JSON.parse(packageJson)
-
 // Commander
 const program = new Command()
-program.name('mes').description(PROJECT_NAME).version(packageJson.version)
+program.name('mes').description(PROJECT_NAME).version(PROJECT_VERSION)
 
 program
 	.command('init')
@@ -62,7 +59,7 @@ program
 	)
 	.action(async (options) => {
 		// console.log('-> options', options, '\n')
-		console.log(PROJECT_NAME, packageJson.version, '\n')
+		console.log(PROJECT_NAME, PROJECT_VERSION, '\n')
 
 		// Get the api key
 		const orgId = options.orgId || ORG_ID
