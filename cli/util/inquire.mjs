@@ -4,7 +4,7 @@ import inquirer from 'inquirer'
 import inquirerPrompt from 'inquirer-autocomplete-prompt'
 inquirer.registerPrompt('autocomplete', inquirerPrompt)
 
-async function inquireNewProjectDetails() {
+async function inquireNewProjectDetails(API_SERVER) {
 	return await inquirer
 		.prompt([
 			{
@@ -25,7 +25,7 @@ async function inquireNewProjectDetails() {
 				name: 'apiServer',
 				message: 'What is the API Server URL?',
 				default() {
-					return 'https://api.mes.monogram.dev'
+					return API_SERVER
 				}
 			}
 		])
@@ -34,7 +34,7 @@ async function inquireNewProjectDetails() {
 		})
 }
 
-async function inquireExistingProjectDetails(apiServer, apiKey) {
+async function inquireExistingProjectDetails(API_SERVER, apiKey) {
 	return await inquirer
 		.prompt([
 			{
@@ -42,7 +42,7 @@ async function inquireExistingProjectDetails(apiServer, apiKey) {
 				name: 'apiServer',
 				message: 'What is the API Server URL?',
 				default() {
-					return apiServer
+					return API_SERVER
 				}
 			},
 			{
@@ -60,7 +60,7 @@ async function inquireExistingProjectDetails(apiServer, apiKey) {
 
 					if (projects.status === 200) {
 						const projectsJson = await projects.json()
-						return projectsJson.map((project) => `${project.name} (${project.id.split('-').pop()})`)
+						return projectsJson.map((project) => `${project.name} (${project.id})`)
 					}
 
 					return []
@@ -71,7 +71,6 @@ async function inquireExistingProjectDetails(apiServer, apiKey) {
 			}
 		])
 		.then((answers) => {
-			console.log('answersanswersanswers', answers)
 			return answers
 		})
 }

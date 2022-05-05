@@ -38,7 +38,7 @@ To make it easier you should add them in your ~/.zshrc file.
 }
 
 let config = null
-let HOST = 'https://api.mes.monogram.dev'
+let API_SERVER = process.env.MES_API_SERVER || 'https://api.mes.monogram.dev'
 
 $.verbose = false
 
@@ -83,11 +83,13 @@ program
 					const projectDetails = await inquireNewProjectDetails()
 					return { ...answers, ...projectDetails }
 				} else {
-					const projectDetails = await inquireExistingProjectDetails(
-						'http://0.0.0.0:4000',
-						initApiKey
-					)
-					return { ...answers, ...projectDetails }
+					const projectDetails = await inquireExistingProjectDetails(API_SERVER, initApiKey)
+					console.log('projectDetails', projectDetails)
+					return {
+						...answers,
+						...projectDetails,
+						projectId: /\(([^)]*)\)/.exec(projectDetails.projectId)[1]
+					}
 				}
 			})
 
@@ -107,7 +109,7 @@ program
 							initApiKey,
 							initAnswers?.projectName,
 							orgId,
-							'gitUrl',
+							'gitUrl', // FIXME: ask for github url
 							initAnswers?.apiServer
 					  )
 					: { id: initAnswers.projectId }
@@ -128,14 +130,16 @@ program
 					initApiKey,
 					initProject?.name,
 					orgId,
-					'gitUrl',
-					HOST
+					'gitUrl', // FIXME: ask for github url
+					API_SERVER
 				)
 
 				if (initProject?.id && newEnvFile)
 					console.log(
 						chalk.green(
-							`✅ Initialized "${initProject.name}" with the project ID "${initProject.id}."`
+							`✅ Initialized ${
+								initProject.name ? initProject.name : 'an existing project'
+							} with the ID "${initProject.id}."`
 						)
 					)
 				else return console.log(chalk.red(`❌ Something went wrong.`))
@@ -263,7 +267,7 @@ async function loadConfig() {
 		const mesConfig = await import('./mes.config.js')
 
 		config = mesConfig.default
-		HOST = !!config.apiServer ? config.apiServer : 'https://api.mes.monogram.dev'
+		if (config.apiServer) API_SERVER = config.apiServer
 	}
 }
 
@@ -315,7 +319,7 @@ async function readEnvFile(envFileName) {
 }
 
 async function getProjectVariables(apiKey, projectId) {
-	let resp = await fetch(`${HOST}/project/${projectId}`, {
+	let resp = await fetch(`${API_SERVER}/project/${projectId}`, {
 		headers: {
 			'X-Api-Key': apiKey
 		}
@@ -370,7 +374,7 @@ function prepareToSaveEnvVar(envVarArr) {
 }
 
 async function pushUpdatesToRemoteServer(apiKey, projectId, newVarUpdates) {
-	return await fetch(`${HOST}/push-file`, {
+	return await fetch(`${API_SERVER}/push-file`, {
 		method: 'POST',
 		headers: {
 			'X-Api-Key': apiKey,
