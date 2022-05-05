@@ -25,6 +25,7 @@
 		"commander": "^9.0.0",
 		"dotenv": "^16.0.0",
 		"inquirer": "^8.2.4",
+		"inquirer-autocomplete-prompt": "^2.0.0",
 		"luxon": "^2.3.0"
 	}
 }

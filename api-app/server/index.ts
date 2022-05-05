@@ -7,7 +7,8 @@ import projects from '../plugins/projects'
 
 const server: Hapi.Server = Hapi.server({
 	port: process.env.PORT || 4000,
-	host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
+	// host: process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
+	host: '0.0.0.0'
 })
 
 export async function start(): Promise<Hapi.Server> {

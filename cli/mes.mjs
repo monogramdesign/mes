@@ -83,7 +83,10 @@ program
 					const projectDetails = await inquireNewProjectDetails()
 					return { ...answers, ...projectDetails }
 				} else {
-					const projectDetails = await inquireExistingProjectDetails()
+					const projectDetails = await inquireExistingProjectDetails(
+						'http://0.0.0.0:4000',
+						initApiKey
+					)
 					return { ...answers, ...projectDetails }
 				}
 			})

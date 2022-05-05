@@ -38,3 +38,11 @@ x-api-key: 11234565432?.qwertyuiop#.nbvcxz
   "envFileContents": "MES_PROJECT_ID=ca2e8777-b347-4142-89e8-63e59e677eee",
   "projectId": "ca2e8777-b347-4142-89e8-63e59e677eee"
 }
+
+
+
+###
+# Get a list of all users
+GET http://0.0.0.0:4000/projects/search?q=xxxx
+content-type: application/json
+x-api-key: 11234565432?.qwertyuiop#.nbvcxz

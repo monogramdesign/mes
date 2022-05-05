@@ -37,6 +37,16 @@ const projectsPlugin = {
 			 */
 			server.route([
 				{
+					method: 'GET',
+					path: '/projects/search',
+					handler: getProjectsByKeywordHandler
+				}
+			]),
+			/**
+			 * Create a new project
+			 */
+			server.route([
+				{
 					method: 'POST',
 					path: '/project',
 					handler: newProjectHandler
@@ -260,6 +270,52 @@ async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 				.code(201)
 		else
 			return h.response({ message: 'Error creating environment file.', success: false }).code(400)
+	} catch (err) {
+		console.log(err)
+	}
+}
+
+/**
+ *
+ * @param request
+ * @param h
+ * @returns
+ */
+async function getProjectsByKeywordHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+	const { prisma } = request.server.app
+	const apiKey = request.headers['x-api-key']
+	const { q } = request.query as any
+
+	// return 400 if apiKey or projectId is missing
+	if (!apiKey) return h.response({ message: 'Missing API key or projectId.' }).code(400)
+
+	try {
+		// Make sure we can find the project using the provided API key
+		const projects = await prisma.project.findMany({
+			where: {
+				AND: [
+					{
+						org: {
+							apiKeys: {
+								some: {
+									key: apiKey
+								}
+							}
+						}
+					},
+
+					{
+						name: {
+							contains: q
+						}
+					}
+				]
+			}
+		})
+
+		// return 204 if project not found
+		if (!Array.isArray(projects) || projects.length <= 0) return h.response().code(204)
+		else return h.response(projects).code(200)
 	} catch (err) {
 		console.log(err)
 	}
