@@ -1,4 +1,4 @@
-import { fs, fetch } from 'zx'
+import { fetch } from 'zx'
 
 async function initNewProject(apiKey, projectName, orgId, gitUrl, HOST) {
 	return fetch(`${HOST}/project`, {
@@ -21,8 +21,6 @@ async function initNewProject(apiKey, projectName, orgId, gitUrl, HOST) {
 		.catch((err) => {
 			console.log('Some error occurred trying to create a new project: ', err)
 		})
-
-	// return Promise.reject(response)
 }
 
 export { initNewProject }

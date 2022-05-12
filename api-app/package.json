@@ -4,7 +4,8 @@
 	"license": "UNLICENSED",
 	"dependencies": {
 		"@hapi/hapi": "^20.2.1",
-		"@prisma/client": "^3.9.2"
+		"@prisma/client": "^3.9.2",
+		"crypto-js": "^4.1.1"
 	},
 	"devDependencies": {
 		"@monogram/prettier-config": "^0.0.8",

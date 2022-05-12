@@ -5,6 +5,10 @@
 		"rootDir": "./",
 		"strict": true,
 		"lib": ["esnext", "dom"],
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"baseUrl": "./",
+		"paths": {
+			"@lib/*": ["lib/*"]
+		}
 	}
 }
