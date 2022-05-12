@@ -1,9 +1,15 @@
 import Hapi from '@hapi/hapi'
+const { createCipheriv, randomBytes, createDecipheriv, scryptSync } = require('crypto')
+const CryptoJS = require('crypto-js')
+import { encrypt } from '@lib/crypto'
+
+// import { Prisma } from '@prisma/client'
 /*
  * TODO: We can't use this type because it is available only in 2.11.0 and previous versions
  * In 2.12.0, this will be namespaced under Prisma and can be used as Prisma.UserCreateInput
  * Once 2.12.0 is release, we can adjust this example.
  */
+// import { UserCreateInput } from '@prisma/client'
 
 // plugin to instantiate Prisma Client
 const projectsPlugin = {
@@ -41,6 +47,16 @@ const projectsPlugin = {
 				}
 			]),
 			/**
+			 * TEMPORARY
+			 */
+			server.route([
+				{
+					method: 'GET',
+					path: '/crypto',
+					handler: cryptoTempHandler
+				}
+			]),
+			/**
 			 * Create a new project
 			 */
 			server.route([
@@ -64,6 +80,48 @@ const projectsPlugin = {
 }
 
 export default projectsPlugin
+
+async function cryptoTempHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+	// const { prisma } = request.server.app
+
+	/// Cipher
+	const password = 'sabbath the cat'
+	const message =
+		'Monogram is a digital agency from Atlanta. We help you share your story, empowering you to make your dent in the universe.'
+	const key = scryptSync(password, 'salt', 24) //create key
+	const iv = randomBytes(16)
+
+	const cipher = createCipheriv('aes-192-cbc', key, iv)
+	console.log('key: ', key.toString('hex'), iv.toString('hex'))
+
+	/// Encrypt
+
+	const encryptedMessage = cipher.update(message, 'utf8', 'hex') + cipher.final('hex')
+	console.log(`Encrypted: ${encryptedMessage}`)
+
+	/// Decrypt
+	const ivd = randomBytes(16)
+	const decipherKey = scryptSync(password, 'salt', 24) //create key
+	const decipher = createDecipheriv('aes-192-cbc', decipherKey, ivd)
+
+	const decryptedMessage =
+		decipher.update(encryptedMessage, 'hex', 'utf-8') + decipher.final('utf8')
+
+	console.log(`Deciphered: ${decryptedMessage.toString('utf-8')}`)
+
+	// Encrypt
+	var ciphertext = CryptoJS.AES.encrypt(message, process.env.CIPHER_SECRET).toString()
+
+	// const ciphertext = CryptoJS.AES.encrypt(message, process.env.CIPHER_SECRET).toString()
+
+	// // Decrypt
+	// var bytes = CryptoJS.AES.decrypt(ciphertext, process.env.CIPHER_SECRET)
+	// var decryptedMessage = bytes.toString(CryptoJS.enc.Utf8)
+
+	// console.log({ ciphertext, decryptedMessage }) // 'my message'
+
+	return h.response({ ciphertext, decryptedMessage }).code(200)
+}
 
 async function getAllProjectsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
