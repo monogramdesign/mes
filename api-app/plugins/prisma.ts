@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import Hapi from '@hapi/hapi'
+import { encrypt, decrypt } from '../lib/crypto'
 
 declare module '@hapi/hapi' {
 	interface ServerApplicationState {
@@ -12,6 +13,15 @@ const prismaPlugin: Hapi.Plugin<null> = {
 	name: 'prisma',
 	register: async function (server: Hapi.Server) {
 		const prisma = new PrismaClient()
+
+		// Middleware to encrypt the env file content
+		prisma.$use(async (params, next) => {
+			// Manipulate params here
+			if (params.model === 'WholeFile' && params?.args?.data?.content) {
+				params.args.data.content = encrypt(params?.args?.data?.content)
+			}
+			return next(params)
+		})
 
 		server.app.prisma = prisma
 

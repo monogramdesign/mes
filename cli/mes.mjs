@@ -168,10 +168,10 @@ program
 			const { mesProjectId, updatedAt: fileUpdatedAt } = await getConfig(envFileName)
 
 			// Get the Project Variables from the API
-			const projEnvVariables = await getProjectVariables(API_KEY, mesProjectId)
+			const projEnvWholeFile = await getProjectVariables(API_KEY, mesProjectId)
 
 			// If the project is not found, exit
-			if (!projEnvVariables)
+			if (!projEnvWholeFile)
 				return console.log(
 					chalk.red(
 						`❌ The project with id "${mesProjectId}" was not found, or your API key is invalid.`
@@ -179,8 +179,8 @@ program
 				)
 
 			// Project synced before; continue
-			if (projEnvVariables.length > 0) {
-				const latestSyncedVariable = projEnvVariables?.[0]
+			if (projEnvWholeFile.length > 0) {
+				const latestSyncedVariable = projEnvWholeFile?.[0]
 
 				// ----------------------------------------------------------------------------------------
 				const remoteLatestUpdatedAt = DateTime.fromJSDate(new Date(latestSyncedVariable.updatedAt))

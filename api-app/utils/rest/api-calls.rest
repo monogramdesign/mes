@@ -30,12 +30,12 @@ x-api-key: 11234565432?.qwertyuiop#.nbvcxz
 
 ###
 # Save a new environment variable version
-POST http://localhost:4000/env
+POST http://localhost:4000/push-file
 content-type: application/json
 x-api-key: 11234565432?.qwertyuiop#.nbvcxz
 
 {
-  "envFileContents": "MES_PROJECT_ID=ca2e8777-b347-4142-89e8-63e59e677eee",
+  "envFileContents": "PRISMA_MIDDLEWARE=Nullam id dolor id nibh ultricies vehicula ut id elit.",
   "projectId": "ca2e8777-b347-4142-89e8-63e59e677eee"
 }
 
@@ -43,6 +43,6 @@ x-api-key: 11234565432?.qwertyuiop#.nbvcxz
 
 ###
 # Get a list of all users
-GET http://0.0.0.0:4000/projects/search?q=xxxx
+GET http://0.0.0.0:4000/projects/search?q=test
 content-type: application/json
 x-api-key: 11234565432?.qwertyuiop#.nbvcxz

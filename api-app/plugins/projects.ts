@@ -1,4 +1,5 @@
 import Hapi from '@hapi/hapi'
+import { decrypt } from '../lib/crypto'
 /*
  * TODO: We can't use this type because it is available only in 2.11.0 and previous versions
  * In 2.12.0, this will be namespaced under Prisma and can be used as Prisma.UserCreateInput
@@ -21,7 +22,7 @@ const projectsPlugin = {
 			}
 		]),
 			/**
-			 * Get a list of all the projects for an org
+			 * Get a list of the latest env files for a project
 			 */
 			server.route([
 				{
@@ -150,7 +151,12 @@ async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseT
 			Array.isArray(project) && project.length > 0
 				? {
 						project: project[0],
-						envContent: files
+						envContent: files.map((file) => {
+							return {
+								...file,
+								content: decrypt(file.content)
+							}
+						})
 				  }
 				: null
 
