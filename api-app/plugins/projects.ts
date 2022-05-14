@@ -1,5 +1,5 @@
 import Hapi from '@hapi/hapi'
-import { decrypt } from '../lib/crypto'
+import { decrypt, getAPIHash } from '../lib/crypto'
 /*
  * TODO: We can't use this type because it is available only in 2.11.0 and previous versions
  * In 2.12.0, this will be namespaced under Prisma and can be used as Prisma.UserCreateInput
@@ -68,10 +68,10 @@ export default projectsPlugin
 
 async function getAllProjectsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
-	const apiKey = request.headers['x-api-key']
+	const apiKeyHash = getAPIHash(request.headers['x-api-key'])
 
 	// return 400 if apiKey or projectId is missing
-	if (!apiKey) return h.response({ message: 'Missing API key or projectId.' }).code(400)
+	if (!apiKeyHash) return h.response({ message: 'Missing API key or projectId.' }).code(400)
 
 	try {
 		// Make sure we can find the project using the provided API key
@@ -81,7 +81,7 @@ async function getAllProjectsHandler(request: Hapi.Request, h: Hapi.ResponseTool
 					org: {
 						apiKeys: {
 							some: {
-								key: apiKey
+								key: apiKeyHash
 							}
 						}
 					}
@@ -108,12 +108,11 @@ async function getAllProjectsHandler(request: Hapi.Request, h: Hapi.ResponseTool
  */
 async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
-
 	const { projectId } = request.params as any
-	const apiKey = request.headers['x-api-key']
+	const apiKeyHash = getAPIHash(request.headers['x-api-key'])
 
 	// return 400 if apiKey or projectId is missing
-	if (!apiKey || !projectId)
+	if (!apiKeyHash || !projectId)
 		return h.response({ message: 'Missing API key or projectId.' }).code(400)
 
 	try {
@@ -125,7 +124,7 @@ async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseT
 					org: {
 						apiKeys: {
 							some: {
-								key: apiKey
+								key: apiKeyHash
 							}
 						}
 					}
@@ -174,12 +173,11 @@ async function getProjectDetailsHandler(request: Hapi.Request, h: Hapi.ResponseT
  */
 async function newProjectHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
-
-	const apiKey = request.headers['x-api-key']
+	const apiKeyHash = getAPIHash(request.headers['x-api-key'])
 	const { orgId, name, gitUrl } = request.payload as any
 
 	// return 400 if apiKey or projectId is missing
-	if (!apiKey || !orgId || !name)
+	if (!apiKeyHash || !orgId || !name)
 		return h.response({ message: 'Missing API key, orgId or other error.' }).code(400)
 
 	try {
@@ -190,7 +188,7 @@ async function newProjectHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 					id: orgId,
 					apiKeys: {
 						some: {
-							key: apiKey
+							key: apiKeyHash
 						}
 					}
 				}
@@ -226,13 +224,12 @@ async function newProjectHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
  */
 async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
-
-	const apiKey = request.headers['x-api-key']
+	const apiKeyHash = getAPIHash(request.headers['x-api-key'])
 	const { envFileContents, projectId } = request.payload as any
 	// const { projectId } = request.params as any
 
 	// return 400 if apiKey or projectId is missing
-	if (!apiKey || !projectId)
+	if (!apiKeyHash || !projectId)
 		return h.response({ message: 'Missing API key or project id error.' }).code(400)
 
 	try {
@@ -244,7 +241,7 @@ async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 					org: {
 						apiKeys: {
 							some: {
-								key: apiKey
+								key: apiKeyHash
 							}
 						}
 					}
@@ -287,11 +284,11 @@ async function newEnvFileHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
  */
 async function getProjectsByKeywordHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
 	const { prisma } = request.server.app
-	const apiKey = request.headers['x-api-key']
+	const apiKeyHash = getAPIHash(request.headers['x-api-key'])
 	const { q } = request.query as any
 
 	// return 400 if apiKey or projectId is missing
-	if (!apiKey) return h.response({ message: 'Missing API key or projectId.' }).code(400)
+	if (!apiKeyHash) return h.response({ message: 'Missing API key or projectId.' }).code(400)
 
 	try {
 		// Make sure we can find the project using the provided API key
@@ -302,7 +299,7 @@ async function getProjectsByKeywordHandler(request: Hapi.Request, h: Hapi.Respon
 						org: {
 							apiKeys: {
 								some: {
-									key: apiKey
+									key: apiKeyHash
 								}
 							}
 						}

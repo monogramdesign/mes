@@ -1,25 +1,29 @@
+# !!!FILL IN THE API KEY BELOW!!!!
+@api_key = 
+@base_url = http://localhost:4000
+
 ###
-GET http://localhost:4000/users
+GET {{base_url}}/users
 
 
 ###
 # Get a list of all users
-GET http://localhost:4000/projects
+GET {{base_url}}/projects
 content-type: application/json
-x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+x-api-key: {{api_key}}
 
 ###
 # Gets the latest 10 versions of the env variables contents
-# GET http://localhost:4000/project/b6214baa-4726-41cc-b7db-f3de92d2555e
-GET http://localhost:4000/project/ca2e8777-b347-4142-89e8-63e59e677eee
-x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+# GET {{base_url}}/project/b6214baa-4726-41cc-b7db-f3de92d2555e
+GET {{base_url}}/project/ca2e8777-b347-4142-89e8-63e59e677eee
+x-api-key: {{api_key}}
 
 
 ###
 # Create a new project
-POST http://localhost:4000/project
+POST {{base_url}}/project
 content-type: application/json
-x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+x-api-key: {{api_key}}
 
 {
   "name": "Test 3",
@@ -30,12 +34,12 @@ x-api-key: 11234565432?.qwertyuiop#.nbvcxz
 
 ###
 # Save a new environment variable version
-POST http://localhost:4000/push-file
+POST {{base_url}}/push-file
 content-type: application/json
-x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+x-api-key: {{api_key}}
 
 {
-  "envFileContents": "PRISMA_MIDDLEWARE=Nullam id dolor id nibh ultricies vehicula ut id elit.",
+  "envFileContents": "PRISMA_MIDDLEWARE=Nullam id dolor id nibh ultricies vehicula ut id elit. Crypto.randomUUID()",
   "projectId": "ca2e8777-b347-4142-89e8-63e59e677eee"
 }
 
@@ -45,4 +49,4 @@ x-api-key: 11234565432?.qwertyuiop#.nbvcxz
 # Get a list of all users
 GET http://0.0.0.0:4000/projects/search?q=test
 content-type: application/json
-x-api-key: 11234565432?.qwertyuiop#.nbvcxz
+x-api-key: {{api_key}}
