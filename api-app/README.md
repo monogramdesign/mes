@@ -10,6 +10,9 @@ Monogram Env Sync (`mes`) is a tool to sync up a project's .env file.
 
 ```bash
 	cp .env.prod .env && gcloud app deploy --project=monogram-env-sync
+
+	# OR SIMPLY
+	gcloud app deploy --project=monogram-env-sync
 ```
 
 ---
