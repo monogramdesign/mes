@@ -25,5 +25,11 @@ If using PlanetScale:
 
 - create a new branch in PlanetScale
 - add the connection to your `.env` file as `DATABASE_URL='mysql://[...]'`
-- run `prisma:push` to push the changes
+- run `yarn prisma:push` to push the changes
 - merge the PlanetScale branch into `main`
+
+### Using Prisma Seed Script
+
+```bash
+npx prisma db seed
+```

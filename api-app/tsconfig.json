@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"sourceMap": true,
 		"outDir": "dist",
-		"rootDir": "./",
+		"rootDir": ".",
 		"strict": true,
 		"lib": ["esnext", "dom"],
 		"esModuleInterop": true,
@@ -10,5 +10,6 @@
 		"paths": {
 			"@lib/*": ["lib/*"]
 		}
-	}
+	},
+	"include": ["**/*.ts"]
 }

@@ -1,7 +1,10 @@
 'use strict'
 
+import 'module-alias/register'
+
 import Hapi from '@hapi/hapi'
 import prisma from '../plugins/prisma'
+import auth from '../plugins/auth'
 import users from '../plugins/users'
 import projects from '../plugins/projects'
 
@@ -12,7 +15,7 @@ const server: Hapi.Server = Hapi.server({
 })
 
 export async function start(): Promise<Hapi.Server> {
-	await server.register([prisma, users, projects])
+	await server.register([prisma, auth, users, projects])
 	await server.start()
 	return server
 }

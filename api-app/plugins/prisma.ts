@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import Hapi from '@hapi/hapi'
-import { encrypt } from '../lib/crypto'
+import { encrypt } from '@lib/crypto'
 
 declare module '@hapi/hapi' {
 	interface ServerApplicationState {
