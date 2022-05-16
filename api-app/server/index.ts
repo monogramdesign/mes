@@ -3,6 +3,8 @@
 import 'module-alias/register'
 
 import Hapi from '@hapi/hapi'
+import Vision from '@hapi/vision'
+
 import prisma from '../plugins/prisma'
 import auth from '../plugins/auth'
 import users from '../plugins/users'
@@ -15,8 +17,17 @@ const server: Hapi.Server = Hapi.server({
 })
 
 export async function start(): Promise<Hapi.Server> {
-	await server.register([prisma, auth, users, projects])
+	await server.register([prisma, auth, users, projects, Vision])
 	await server.start()
+
+	server.views({
+		engines: {
+			html: require('handlebars')
+		},
+		relativeTo: __dirname,
+		path: '../templates'
+	})
+
 	return server
 }
 

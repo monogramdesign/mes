@@ -1,7 +1,7 @@
 import Hapi from '@hapi/hapi'
 import jwt from 'jsonwebtoken'
 import { getHash } from '@lib/crypto'
-import { verifyToken } from '@lib/auth'
+import { createToken, verifyToken } from '@lib/auth'
 
 /*
  * TODO: We can't use this type because it is available only in 2.11.0 and previous versions
@@ -17,25 +17,32 @@ const usersPlugin = {
 	register: async function (server: Hapi.Server) {
 		server.route([
 			{
+				method: 'GET',
+				path: '/auth/sign-in',
+				handler(request, h) {
+					return h.view('sign-in')
+				}
+			},
+			{
 				method: '*',
-				path: '/auth',
+				path: '/api/auth',
 				handler: (request, reply) => {
 					return reply.redirect('/')
 				}
 			},
 			{
 				method: 'POST',
-				path: '/auth/register',
+				path: '/api/auth/register',
 				handler: registerUserHandler
 			},
 			{
 				method: 'POST',
-				path: '/auth/sign-in',
+				path: '/api/auth/sign-in',
 				handler: signInUserHandler
 			},
 			{
-				method: 'POST',
-				path: '/auth/verify-token',
+				method: '*',
+				path: '/api/auth/verify-token',
 				handler: verifyTokenHandler
 			}
 		])
@@ -75,10 +82,10 @@ async function registerUserHandler(request: Hapi.Request, h: Hapi.ResponseToolki
 			}
 		})
 
+		// TODO: Check response before continuing
+
 		// Create token
-		const token = jwt.sign({ name, email }, process.env.JWT_TOKEN_KEY || 'MES', {
-			expiresIn: '30 days'
-		})
+		const token = createToken({ name, email })
 
 		return h.response({ success: register.id ? true : false, token }).code(200)
 	} catch (err) {
@@ -86,7 +93,31 @@ async function registerUserHandler(request: Hapi.Request, h: Hapi.ResponseToolki
 	}
 }
 
-async function signInUserHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {}
+async function signInUserHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+	const { prisma } = request.server.app
+	const { username, password } = request.payload as any
+
+	if (!username || !password) {
+		return h.response('Username or password missing.').code(401)
+	} else {
+		const user = await prisma.user.findMany({
+			where: {
+				email: username,
+				password: getHash(password)
+			}
+		})
+
+		console.log(user)
+		if (user.length === 0) {
+			return h.response('Invalid username or password.').code(401)
+		} else {
+			// Create token
+			const token = createToken({ name: user[0].name || '', email: user[0].email })
+
+			return h.response({ success: true, token }).code(200)
+		}
+	}
+}
 
 /**
  * Verify the token
@@ -95,10 +126,10 @@ async function signInUserHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
  * @returns
  */
 async function verifyTokenHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
-	const { token } = request.payload as any
+	const bearer = request.headers['authorization']
 
 	try {
-		return h.response(verifyToken(token)).code(200)
+		return h.response(verifyToken(bearer)).code(200)
 	} catch (err) {
 		return h.response('Token is not valid.').code(401)
 	}

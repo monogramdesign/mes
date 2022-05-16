@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>MES Sign In</title>
+		<style type="text/css">
+			body {
+				font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu;
+			}
+
+			h1 {
+				font-size: 2em;
+				font-weight: bold;
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+	</head>
+
+	<body>
+		<h1>Sign In</h1>
+		<form action="/api/auth/sign-in" method="POST">
+			<input type="email" name="username" placeholder="Username" autocomplete="username">
+			<input type="password" name="password" placeholder="Password" autocomplete="current-password">
+			<button type="submit">Sign In</button>
+		</form>
+	</body>
+
+</html>

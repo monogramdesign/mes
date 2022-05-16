@@ -11,5 +11,6 @@
 			"@lib/*": ["lib/*"]
 		}
 	},
-	"include": ["**/*.ts"]
+	"include": ["**/*.ts", "**/*.html"],
+	"exclude": ["node_modules", "dist"]
 }

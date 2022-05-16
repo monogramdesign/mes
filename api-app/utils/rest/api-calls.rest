@@ -57,7 +57,7 @@ x-api-key: {{api_key}}
 # ------------------------------------------------------------------------------
 # Authentication
 # ------------------------------------------------------------------------------
-POST {{base_url}}/auth/register
+POST {{base_url}}/api/auth/register
 content-type: application/json
 
 {
@@ -68,9 +68,8 @@ content-type: application/json
 }
 
 ### 
-POST {{base_url}}/auth/verify-token
-content-type: application/json
+# Can also be used as POST
 
-{
-	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2xhdWRpbyBGb2ZpdSIsImVtYWlsIjoiY2xhdWRpb0Btb25vZ3JhbS5pbyIsImlhdCI6MTY1MjU4NzQ4OCwiZXhwIjoxNjU1MTc5NDg4fQ.u_oZw4UbPPefpi731BuDr7mMSfKTHNP26gN175akygA"
-}
+GET {{base_url}}/api/auth/verify-token
+content-type: application/json
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2xhdWRpbyBGb2ZpdSIsImVtYWlsIjoiY2xhdWRpb0Btb25vZ3JhbS5pbyIsImlhdCI6MTY1MjU4NzQ4OCwiZXhwIjoxNjU1MTc5NDg4fQ.u_oZw4UbPPefpi731BuDr7mMSfKTHNP26gN175akygA
