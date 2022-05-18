@@ -37,6 +37,11 @@ const usersPlugin = {
 			},
 			{
 				method: 'POST',
+				path: '/api/auth/reset-password',
+				handler: resetPasswordHandler
+			},
+			{
+				method: 'POST',
 				path: '/api/auth/sign-in',
 				handler: signInUserHandler
 			},
@@ -130,6 +135,55 @@ async function verifyTokenHandler(request: Hapi.Request, h: Hapi.ResponseToolkit
 
 	try {
 		return h.response(verifyToken(bearer)).code(200)
+	} catch (err) {
+		return h.response('Token is not valid.').code(401)
+	}
+}
+
+async function resetPasswordHandler(request: Hapi.Request, h: Hapi.ResponseToolkit) {
+	const { prisma } = request.server.app
+	const bearer = request.headers['authorization']
+	const { oldPassword, newPassword } = request.payload as any
+
+	try {
+		const tokenContents = verifyToken(bearer)
+
+		if (oldPassword === newPassword)
+			return h
+				.response({
+					success: false,
+					message: 'New password is the same as the old. Password not changed.'
+				})
+				.code(401)
+
+		// Token invalid
+		if (!tokenContents?.email || tokenContents?.email === '') {
+			return h.response({ success: false, message: 'Invalid token' }).code(401)
+		} else {
+			// Lookup user; make sure password matches
+			const user = await prisma.user.findMany({
+				where: {
+					email: tokenContents?.email,
+					password: getHash(oldPassword)
+				}
+			})
+
+			if (user.length === 0) {
+				return h.response({ success: false, message: 'Invalid old password' }).code(401)
+			} else {
+				// User found, update password
+				await prisma.user.update({
+					where: {
+						email: tokenContents?.email
+					},
+					data: {
+						password: getHash(newPassword)
+					}
+				})
+
+				return h.response({ success: true, message: 'Password reset successful.' }).code(200)
+			}
+		}
 	} catch (err) {
 		return h.response('Token is not valid.').code(401)
 	}

@@ -73,3 +73,15 @@ content-type: application/json
 GET {{base_url}}/api/auth/verify-token
 content-type: application/json
 authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2xhdWRpbyBGb2ZpdSIsImVtYWlsIjoiY2xhdWRpb0Btb25vZ3JhbS5pbyIsImlhdCI6MTY1MjU4NzQ4OCwiZXhwIjoxNjU1MTc5NDg4fQ.u_oZw4UbPPefpi731BuDr7mMSfKTHNP26gN175akygA
+
+
+### 
+POST {{base_url}}/api/auth/reset-password
+content-type: application/json
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQ2xhdWRpbyBGb2ZpdSIsImVtYWlsIjoiY2xhdWRpb0Btb25vZ3JhbS5pbyIsImlhdCI6MTY1MjU4NzQ4OCwiZXhwIjoxNjU1MTc5NDg4fQ.u_oZw4UbPPefpi731BuDr7mMSfKTHNP26gN175akygA
+
+{
+	"email": "claudio@monogram.io",
+	"oldPassword": "password",
+	"newPassword": "password"
+}

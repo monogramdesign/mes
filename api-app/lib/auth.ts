@@ -20,7 +20,7 @@ export function verifyToken(bearer: string) {
 			const token = credentials
 
 			//verify token
-			return jwt.verify(token, process.env.JWT_TOKEN_KEY || 'MES')
+			return jwt.verify(token, process.env.JWT_TOKEN_KEY || 'MES') as any
 		}
 	}
 }
