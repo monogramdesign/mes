@@ -198,6 +198,8 @@ async function newProjectHandler(request: Hapi.Request, h: Hapi.ResponseToolkit)
 			// }
 		})
 
+		console.log('orgorg', org)
+
 		// If we can't find the org with the provided api key, return 400
 		if (org.length <= 0) return h.response({ message: 'Invalid Org Id or API key.' }).code(400)
 

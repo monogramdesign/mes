@@ -1,6 +1,6 @@
 # !!!FILL IN THE API KEY BELOW!!!!
 @api_key = 
-@base_url = http://localhost:4000
+@base_url = http://0.0.0.0:4000
 
 ###
 GET {{base_url}}/users
@@ -8,7 +8,7 @@ GET {{base_url}}/users
 
 ###
 # Get a list of all users
-GET {{base_url}}/projects
+GET {{base_url}}/projects?q=mes
 content-type: application/json
 x-api-key: {{api_key}}
 

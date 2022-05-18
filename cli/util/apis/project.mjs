@@ -16,6 +16,8 @@ async function initNewProject(apiKey, projectName, orgId, gitUrl, HOST) {
 		.then(async (response) => {
 			if (response.ok) {
 				return await response.json()
+			} else {
+				throw new Error(`${response.status} ${response.statusText}`)
 			}
 		})
 		.catch((err) => {

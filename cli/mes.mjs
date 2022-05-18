@@ -1,11 +1,16 @@
 #! /usr/bin/env node
 
+import Configstore from 'configstore'
 import { Command } from 'commander'
 import { $, chalk, fs, fetch } from 'zx'
 import { DateTime } from 'luxon'
 
 import inquirer from 'inquirer'
 import 'dotenv/config'
+const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+
+// Create a Configstore instance.
+const mesConfig = new Configstore(packageJson.name)
 
 import {
 	initNewFile,
@@ -16,28 +21,20 @@ import {
 } from './util/file.mjs'
 
 import { initNewProject } from './util/apis/project.mjs'
-import { inquireNewProjectDetails, inquireExistingProjectDetails } from './util/inquire.mjs'
+import {
+	inquireAppInit,
+	inquireNewProjectDetails,
+	inquireExistingProjectDetails
+} from './util/inquire.mjs'
 import { PROJECT_NAME, PROJECT_VERSION } from './util/constants.mjs'
 
 // Global variables
 // Get the API Key
-const API_KEY = process.env.MES_API_KEY
-const ORG_ID = process.env.MES_ORG_ID
-
-if (!API_KEY || !ORG_ID) {
-	console.log(chalk.red(`❌ API_KEY and ORG_ID not available.`))
-	console.log(`
-To make it easier you should add them in your ~/.zshrc file.
-
-  export MES_API_KEY=<your-api-key>
-  export MES_ORG_ID=<your-org-id>
-`)
-
-	process.exit(1)
-}
+const API_KEY = mesConfig.get('apiKey')
+const ORG_ID = mesConfig.get('orgId')
 
 let config = null
-let API_SERVER = process.env.MES_API_SERVER || 'https://api.mes.monogram.dev'
+let API_SERVER = mesConfig.get('apiServer') || 'https://api.mes.monogram.dev'
 
 $.verbose = false
 
@@ -47,6 +44,19 @@ program.name('mes').description(PROJECT_NAME).version(PROJECT_VERSION)
 
 program
 	.command('init')
+	.description('Sync the environment file to the remote environment.')
+	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
+	.action(async () => {
+		// Load config
+		await loadConfig()
+
+		const appInitDetails = await inquireAppInit()
+		console.log('appInitDetails', appInitDetails)
+		mesConfig.set(appInitDetails)
+	})
+
+program
+	.command('project')
 	.description(`Initialize a new project. (Use single quotes to wrap your <orgId> and <apikey>.)`)
 	.option('-o, --orgId <orgId>', 'Organization ID')
 	.option('-k, --api-key <apikey>', "Organization's API Key")
@@ -57,7 +67,6 @@ program
 		false
 	)
 	.action(async (options) => {
-		// console.log('-> options', options, '\n')
 		console.log(PROJECT_NAME, PROJECT_VERSION, '\n')
 
 		// Get the api key
@@ -65,7 +74,7 @@ program
 		const initApiKey = options.apikey || API_KEY
 		const envFileName = options.envFile || '.env.local'
 
-		const initAnswers = await inquirer
+		const projectInitAnswers = await inquirer
 			.prompt([
 				{
 					type: 'list',
@@ -92,29 +101,29 @@ program
 		// User FYI
 		console.log(
 			`\nThe following ${chalk.cyan(
-				initAnswers.projectType.toLowerCase()
+				projectInitAnswers.projectType.toLowerCase()
 			)} project is being intialized:\n`,
-			initAnswers,
+			projectInitAnswers,
 			'\n'
 		)
 
 		if (!checkFileExists(`${process.cwd()}/mes.config.js`) || options.force) {
 			const initProject =
-				initAnswers.projectType === 'New'
+				projectInitAnswers.projectType === 'New'
 					? await initNewProject(
 							initApiKey,
-							initAnswers?.projectName,
+							projectInitAnswers?.projectName,
 							orgId,
 							'gitUrl', // FIXME: ask for github url
-							initAnswers?.apiServer
+							projectInitAnswers?.apiServer
 					  )
-					: { id: initAnswers.projectId }
+					: { id: projectInitAnswers.projectId }
 
 			// initialize the new config file
 			await initNewConfigFile({
 				syncType: 'file',
 				projectId: initProject.id,
-				apiServer: initAnswers?.apiServer
+				apiServer: projectInitAnswers?.apiServer
 			})
 
 			// initialize the new .env file
@@ -153,6 +162,20 @@ program
 
 program
 	.command('sync')
+	.description(
+		'Sync the environment file to the remote environment. This will try to merge the remote environment file with the local one using a `diff` algorithm.'
+	)
+	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
+	.action(async () => {
+		// Load config
+		await loadConfig()
+
+		if (canExecute()) {
+		}
+	})
+
+program
+	.command('pull')
 	.description('Sync the local environment file with the remote environment file')
 	.option('-e, --env-file <filename>', 'Path to .env', '.env.local')
 	// .option('-u --up', 'Sync up to the server', false)
@@ -253,6 +276,15 @@ program.parse()
  * @returns {boolean} - True if the config file exists
  */
 function canExecute() {
+	if (!API_KEY || !ORG_ID) {
+		console.log(
+			chalk.red(`❌ API_KEY and ORG_ID not available.`),
+			`\nPlease run "mes init" to set up your API Key and Organization ID.`
+		)
+
+		process.exit(1)
+	}
+
 	return !!config
 }
 
