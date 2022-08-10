@@ -32,6 +32,7 @@
 		"gcp-build": "tsc -p .",
 		"deploy": "gcloud app deploy",
 		"start": "node ./dist/server",
+		"railway": "npm run gcp-build && npm run start",
 		"prisma:push": "prisma db push",
 		"prisma:build": "PRISMA_CLIENT_ENGINE_TYPE='dataproxy' prisma generate"
 	}
