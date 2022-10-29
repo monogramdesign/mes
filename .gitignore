@@ -44,5 +44,6 @@ tests/e2e/results
 .sentryclirc
 .env
 
+.svelte-kit
 
 mes.config.js

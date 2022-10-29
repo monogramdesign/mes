@@ -1,0 +1,37 @@
+/*!
+*
+*  //\\
+* //XX\\
+*
+* Made by Monogram. https://monogram.io
+* ------------------------------------------------------------------------------
+* Copyright (c) 2022 Monogram. All rights reserved.
+* Contains open-source software. https://monogram.io/licenses.txt
+*/
+
+@tailwind base;
+@tailwind components;
+
+@layer base {
+	html {
+		@apply antialiased h-full scroll-smooth;
+	}
+	body {
+		@apply h-full flex flex-col;
+	}
+	main {
+		@apply flex-1;
+	}
+	.section {
+		@apply py-24;
+	}
+	.title {
+		@apply font-bold font-display tracking-tighter;
+	}
+}
+
+#svelte {
+	@apply contents;
+}
+
+@tailwind utilities;
